@@ -1,0 +1,55 @@
+diff --git a/Makefile b/Makefile
+index deec08b..68d7134 100644
+--- a/Makefile
++++ b/Makefile
+@@ -733,7 +733,7 @@ export mod_sign_cmd
+ 
+ 
+ ifeq ($(KBUILD_EXTMOD),)
+-core-y		+= kernel/ mm/ fs/ ipc/ security/ crypto/ block/
++core-y		+= mysyscall/ kernel/ mm/ fs/ ipc/ security/ crypto/ block/ 
+ 
+ vmlinux-dirs	:= $(patsubst %/,%,$(filter %/, $(init-y) $(init-m) \
+ 		     $(core-y) $(core-m) $(drivers-y) $(drivers-m) \
+diff --git a/arch/x86/syscalls/syscall_64.tbl b/arch/x86/syscalls/syscall_64.tbl
+index 38ae65d..ad0d4e2 100644
+--- a/arch/x86/syscalls/syscall_64.tbl
++++ b/arch/x86/syscalls/syscall_64.tbl
+@@ -356,3 +356,4 @@
+ 540	x32	process_vm_writev	compat_sys_process_vm_writev
+ 541	x32	setsockopt		compat_sys_setsockopt
+ 542	x32	getsockopt		compat_sys_getsockopt
++543 x32 mysyscall       sys_mysyscall
+diff --git a/include/linux/syscalls.h b/include/linux/syscalls.h
+index 7fac04e..4844352 100644
+--- a/include/linux/syscalls.h
++++ b/include/linux/syscalls.h
+@@ -320,6 +320,8 @@ asmlinkage long sys_init_module(void __user *umod, unsigned long len,
+ asmlinkage long sys_delete_module(const char __user *name_user,
+ 				unsigned int flags);
+ 
++asmlinkage long sys_mysyscall(void);
++
+ #ifdef CONFIG_OLD_SIGSUSPEND
+ asmlinkage long sys_sigsuspend(old_sigset_t mask);
+ #endif
+diff --git a/mysyscall/Makefile b/mysyscall/Makefile
+new file mode 100644
+index 0000000..4fc92e4
+--- /dev/null
++++ b/mysyscall/Makefile
+@@ -0,0 +1 @@
++obj-y := mysyscall.o
+diff --git a/mysyscall/mysyscall.c b/mysyscall/mysyscall.c
+new file mode 100644
+index 0000000..08ff72b
+--- /dev/null
++++ b/mysyscall/mysyscall.c
+@@ -0,0 +1,7 @@
++#include <linux/kernel.h>
++#include <linux/syscalls.h>
++
++asmlinkage long sys_mysyscall(void) {
++	printk(KERN_ALERT "Hello syscalls!\n");
++	return 0;
++}

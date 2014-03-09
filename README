@@ -1,0 +1,59 @@
+Juston Li - 950998500
+
+*Files:
+	joker.c
+	joker.h
+	Makefile
+	myatoi.c
+	parse.c
+	README
+	syscall_screenshot
+	sys_call.patch
+	syscaller.c
+
+*Extra Credit
+	1.3 SIGSTOP also cannot be trapped.
+		Unhandled real-time signals terminate the program by default
+		man 7 signal
+	1.5 parse source file
+	1.6 atoi source file	
+
+*Compilation
+	make - compile source files to executable 'joker'
+	make clean - to clear executables and .o files
+
+*Overview
+The shell has been completed to specification along with a version of atoi and a parser for program arguments. The shell does run given program arguments from the parser.
+Some light testing on common cases was done as well as checking for memory errors. 
+Created mysyscall, simple print string syscall. Compiled and tested kernel, attached screenshot, syscaller.c and diff patch.
+
+
+*Code layout
+joker.c contains the shell functionality. It begins checking and handling the given args converted to int by atoi. It then declares an alarm signal handler before entering the while loop. 
+The while begins by writing '#joker' to emulate a shell and awaits user input to read. When the input is read, it is checked to be under 1024 bytes (max from specs) if it is over 1024, joker will write that the input is too large and restart the loop. The buffer size can be arbitrally large to prevent buffer overload.  'xargs --show-limits' to set a true limit.
+Once the input has been read to buffer it must now be parsed. First a loop checks how many spaces are in the buffer as a measure of how many args. It then gets rid \n from enter. It then retrieves every space separated arg from parse.c, ignoring multi spaces.
+Program then forks, Child will execve the args, if it doesn't it will perror.
+Parent sets the user determind alarm. If alarm goes off a SIGKILL is sent to the child and the kill msg is printed. 
+If the child returns first it will cancel the alarm. It will check if the child terminated normally to print the failed kill msg. 
+
+parse and atoi are in their respective source files and declarations are in joker.h
+parse.c returns a string in a position of args. I couldn't figure out how to return a char** with parse so I just returned one specified string at a time.
+
+atoi.c converts char to int. It only accepts positive integers, anything else should be caught and atoi returns -1 in which joker.c will end and declare an invalid input 
+
+*Comments
+-inexperience with c showed writing parse, I had some difficulty with pointers and could not return a char**. Eventually when I realized I needed to use calloc() and made it work returning strings. It is a bad implementation that required workarounds by returning strings one at a time and dealing with spaces by ignoring empty strings.
+-Error handling, only have error handling for the execve and read, others don't seem as necessary. 
+-Nothing to do handling memory leaks, only use calloc once per parse call and seems to automatically free.
+==11694== HEAP SUMMARY:
+==11694==     in use at exit: 0 bytes in 0 blocks
+==11694==   total heap usage: 3 allocs, 3 frees, 3,072 bytes allocated
+==11694== 
+==11694== All heap blocks were freed -- no leaks are possible
+==11694== 
+==11694== For counts of detected and suppressed errors, rerun with: -v
+==11694== ERROR SUMMARY: 0 errors from 0 contexts (suppressed: 2 from 2);
+
+*Hours spent
+7, a large chunk on parse. Much of the difficulty was getting used to C, the logic wasn't hard. 
+
